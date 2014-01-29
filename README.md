@@ -7,9 +7,8 @@ Notes by Steve Stonebraker
 
 ### Networking
 
-* Interface Info
 
-list of ips
+List of ips
 
     ip addr list
     ip addr list eth0
