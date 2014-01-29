@@ -12,6 +12,7 @@ List of ips
 
     ip addr list
     ip addr list eth0
+    alias ips='ip addr list | grep -o '\''inet6\? \(\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\)\|[a-fA-F0-9:]\+\)'\'' | sed -e '\''s/inet6* //'\'' | sort'
 
 Interface Info
 
