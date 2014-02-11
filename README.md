@@ -74,3 +74,21 @@ Static Routes - persistant
 
     echo "10.0.0.0/8 via 192.168.0.1" >> /etc/sysconfig/network-scripts/route-eth2
 
+### Bash
+
+Basic Parameters
+The simplest form of parameter expansion is reflected in the ordinary use of variables. For example, $a, when expanded, becomes whatever the variable a contains. Simple parameters may also be surrounded by braces, such as ${a}. This has no effect on the expansion, but it is required if the variable is adjacent to other text, which may confuse the shell. In this example, we attempt to create a filename by appending the string _file to the contents of the variable a.
+
+    [me@linuxbox ˜]$ a="foo"
+    [me@linuxbox ˜]$ echo "$a_file"
+
+If we perform this sequence, the result will be nothing, because the shell will try to expand a variable named a_file rather than a. This problem can be solved by adding braces:
+
+    [me@linuxbox ˜]$ echo "${a}_file"
+    foo_file
+    
+We have also seen that positional parameters greater than 9 can be accessed by surrounding the number in braces. For example, to access the 11th positional parameter, we can do this: ${11}.
+Expansions to Manage Empty Variables
+Several parameter expansions deal with nonexistent and empty variables. These expansions are handy for handling missing positional parameters and assigning default values to parameters. Here is one such expansion:
+
+    ${parameter:-word}
