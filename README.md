@@ -384,3 +384,28 @@ When executed, the script produces output like this:
     Size:       394213
     Owner:       me
     Group:       me    
+
+
+TEMPORARY FILES
+
+One reason signal handlers are included in scripts is to remove temporary files that the script may create to hold intermediate results during execution. There is something of an art to naming temporary files. Traditionally, programs on Unix-like systems create their temporary files in the /tmp directory, a shared directory intended for such files. However, since the directory is shared, this poses certain security concerns, particularly for programs running with superuser privileges. Aside from the obvious step of setting proper permissions for files exposed to all users of the system, it is important to give temporary files non-predictable filenames. This avoids an exploit known as a temp race attack. One way to create a non-predictable (but still descriptive) name is to do something like this:
+
+    tempfile=/tmp/$(basename $0).$$.$RANDOM
+
+This will create a filename consisting of the program’s name, followed by its process ID (PID), followed by a random integer. Note, however, that the $RANDOM shell variable returns a value only in the range of 1 to 32767, which is not a very large range in computer terms, so a single instance of the variable is not sufficient to overcome a determined attacker.
+
+A better way is to use the mktemp program (not to be confused with the mktemp standard library function) to both name and create the temporary file.
+
+The mktemp program accepts a template as an argument that is used to build the filename. The template should include a series of X characters, which are replaced by a corresponding number of random letters and numbers. The longer the series of X characters, the longer the series of random characters. Here is an example:
+
+    tempfile=$(mktemp /tmp/foobar.$$.XXXXXXXXXX)
+
+This creates a temporary file and assigns its name to the variable tempfile. The X characters in the template are replaced with random letters and numbers so that the final filename (which, in this example, also includes the expanded value of the special parameter $$ to obtain the PID) might be something like
+
+    /tmp/foobar.6593.UOZuvM6654
+
+While the mktemp man page states that mktemp makes a temporary filename, mktemp also creates the file as well.
+
+For scripts that are executed by regular users, it may be wise to avoid the use of the /tmp directory and create a directory for temporary files within the user’s home directory, with a line of code such as this:
+
+    [[ -d $HOME/tmp ]] || mkdir $HOME/tmp
