@@ -273,3 +273,114 @@ Next, we will compare the efficiency of the two versions by using the time comma
     sys     0m0.008s
     
 The original version of the script takes 3.618 seconds to scan the text file, while the new version, using parameter expansion, takes only 0.06 seconds—a very significant improvement.
+
+Group Commands and Subshells
+bash allows commands to be grouped together. This can be done in one of two ways: either with a group command or with a subshell. Here are examples of the syntax of each.
+Group command:
+
+    { command1; command2; [command3; ...] }
+
+Subshell:
+ 
+    (command1; command2; [command3;...])
+
+The two forms differ in that a group command surrounds its commands with braces and a subshell uses parentheses. It is important to note that, due to the way bash implements group commands, the braces must be separated from the commands by a space and the last command must be terminated with either a semicolon or a newline prior to the closing brace.
+
+Performing Redirections
+
+So what are group commands and subshells good for? While they have an important difference (which we will get to in a moment), they are both used to manage redirection. Let’s consider a script segment that performs redirections on multiple commands:
+
+    ls -l > output.txt
+    echo "Listing of foo.txt" >> output.txt
+    cat foo.txt >> output.txt
+
+This is pretty straightforward: three commands with their output redirected to a file named output.txt. Using a group command, we could code this as follows:
+
+    { ls -l; echo "Listing of foo.txt"; cat foo.txt; } > output.txt
+
+Using a subshell is similar:
+
+    (ls -l; echo "Listing of foo.txt"; cat foo.txt) > output.txt
+
+Using this technique, we have saved ourselves some typing, but where a group command or subshell really shines is with pipelines. When constructing a pipeline of commands, it is often useful to combine the results of several commands into a single stream. Group commands and subshells make this easy:
+
+    { ls -l; echo "Listing of foo.txt"; cat foo.txt; } | lpr
+
+Here we have combined the output of our three commands and piped them into the input of lpr to produce a printed report.
+
+Process Substitution
+
+While they look similar and can both be used to combine streams for redirection, there is an important difference between group commands and subshells. Whereas a group command executes all of its commands in the current shell, a subshell (as the name suggests) executes its commands in a child copy of the current shell. This means that the environment is copied and given to a new instance of the shell. When the subshell exits, the copy of the environment is lost, so any changes made to the subshell’s environment (including variable assignment) are lost as well. Therefore, in most cases, unless a script requires a subshell, group commands are preferable to subshells. Group commands are both faster and require less memory.
+
+We saw an example of the subshell environment problem in Chapter 28, when we discovered that a read command in a pipeline does not work as we might intuitively expect. To recap, when we construct a pipeline like this:
+
+    echo "foo" | read
+    echo $REPLY
+
+the content of the REPLY variable is always empty, because the read command is executed in a subshell and its copy of REPLY is destroyed when the subshell terminates.
+Because commands in pipelines are always executed in subshells, any command that assigns variables will encounter this issue. Fortunately, the shell provides an exotic form of expansion called process substitution that can be used to work around this problem.
+
+Process substitution is expressed in two ways: for processes that produce standard output:
+
+    <(list)
+
+or for processes that intake standard input:
+
+    >(list)
+
+where list is a list of commands.
+To solve our problem with read, we can employ process substitution like this:
+
+    read < <(echo "foo")
+    echo $REPLY
+
+Process substitution allows us to treat the output of a subshell as an ordinary file for purposes of redirection. In fact, since it is a form of expansion, we can examine its real value:
+
+    [me@linuxbox ˜]$ echo <(echo "foo")
+    /dev/fd/63
+
+By using echo to view the result of the expansion, we see that the output of the subshell is being provided by a file named /dev/fd/63.
+
+Process substitution is often used with loops containing read. Here is an example of a read loop that processes the contents of a directory listing created by a subshell:
+
+    #!/bin/bash
+    
+    # pro-sub : demo of process substitution
+    
+    while read attr links owner group size date time filename; do
+          cat <<- EOF
+                Filename:   $filename
+                Size:        $size
+                Owner:       $owner
+                Group:       $group
+                Modified:   $date $time
+                Links:       $links
+                 Attributes: $attr
+    
+          EOF
+    done < <(ls -l | tail -n +2)
+
+The loop executes read for each line of a directory listing. The listing itself is produced on the final line of the script. This line redirects the output of the process substitution into the standard input of the loop. The tail command is included in the process substitution pipeline to eliminate the first line of the listing, which is not needed.
+When executed, the script produces output like this:
+
+    [me@linuxbox ˜]$ pro_sub | head -n 20
+    Filename:    addresses.ldif
+    Size:       14540
+    Owner:       me
+    Group:       me
+    Modified:    2012-04-02 11:12
+    Links:       1
+    Attributes: -rw-r--r--
+    
+    Filename:   bin
+    Size:       4096
+    Owner:       me
+    Group:       me
+    Modified:    2012-07-10 07:31
+    Links:       2
+    Attributes: drwxr-xr-x
+    
+    Filename:    bookmarks.html
+    Size:       394213
+    Owner:       me
+    Group:       me    
