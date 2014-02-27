@@ -1,0 +1,40 @@
+ssh_keepalive_notes.txt
+
+Terms:
+
+ServerAliveInterval: number of seconds that the client will wait before sending a null packet to the server (to keep the connection alive).
+ClientAliveInterval: number of seconds that the server will wait before sending a null packet to the client (to keep the connection alive).
+ClientAliveCountMax on the server side might also help. This is the limit of how long a client are allowed to stay unresponsive before being disconnected. The default value is 3, as in three ClientAliveInterval.
+
+
+*************************************************************************
+* CLIENT CONFIG
+*
+* modify ~/.ssh/config and add these lines:
+*
+Host *
+	# Send null packet to server every 60 seconds to indicate you are alive
+    ServerAliveInterval 60
+*************************************************************************
+
+*************************************************************************
+* Server Config
+*
+* modify /etc/ssh/sshd_config (don't forget to restart sshd)
+*
+* Example: Disconnect user if they do not input anything for 10 hours [600/60 seconds]
+# Send null packet every 60 seconds.  After 600 failed attempts, disconnect user
+TCPKeepAlive yes
+ClientAliveInterval 60
+ClientAliveCountMax 600
+
+* Example: Disconnect user if they do not input anything for 100 hours [6000/60 seconds] (4.1 days) 
+# Send null packet every 60 seconds.  After 6000 failed attempts, disconnect user
+TCPKeepAlive yes
+ClientAliveInterval 60
+ClientAliveCountMax 6000
+
+*
+* /etc/init.d/sshd restart
+*
+*************************************************************************
