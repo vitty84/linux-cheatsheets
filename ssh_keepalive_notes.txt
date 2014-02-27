@@ -7,6 +7,11 @@ ServerAliveInterval [~/.ssh/config on client]:
 # of seconds before the client sends a null packet to the server
 client --> null packet ("Keep this conneciton open!") ---> server
 **************************************************
+**************************************************
+ServerAliveCountMax  [~/.ssh/config on server]:
+# of ServerAliveInterval's that must fail (null packet not delivered to client) before disconnecting from server
+client -> null packet -xx(fail)xx-> server
+**************************************************
 ClientAliveInterval [/etc/ssh/sshd_config on server]:
 # of seconds before the server sends a null packet to the client
 client <-- null packet ("Keep this conneciton open!") <--- server
@@ -49,4 +54,3 @@ ClientAliveCountMax 6000
 *************************************************************************
  
 
- 
