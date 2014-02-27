@@ -2,10 +2,19 @@ ssh_keepalive_notes.txt
 
 Terms:
 
-ServerAliveInterval: number of seconds that the client will wait before sending a null packet to the server (to keep the connection alive).
-ClientAliveInterval: number of seconds that the server will wait before sending a null packet to the client (to keep the connection alive).
-ClientAliveCountMax on the server side might also help. This is the limit of how long a client are allowed to stay unresponsive before being disconnected. The default value is 3, as in three ClientAliveInterval.
-
+**************************************************
+ServerAliveInterval [~/.ssh/config on client]:
+# of seconds before the client sends a null packet to the server
+client --> null packet ("Keep this conneciton open!") ---> server
+**************************************************
+ClientAliveInterval [/etc/ssh/sshd_config on server]:
+# of seconds before the server sends a null packet to the client
+client <-- null packet ("Keep this conneciton open!") <--- server
+**************************************************
+ClientAliveCountMax  [/etc/ssh/sshd_config on server]:
+# of ClientAliveInterval's that must fail (null packet not delivered to client) before disconnecting client
+server -> null packet -xx(fail)xx-> client
+**************************************************
 
 *************************************************************************
 * CLIENT CONFIG
@@ -38,3 +47,6 @@ ClientAliveCountMax 6000
 * /etc/init.d/sshd restart
 *
 *************************************************************************
+ 
+
+ 
